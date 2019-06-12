@@ -12,12 +12,15 @@ import net.jradius.packet.attribute.RadiusAttribute;
 public abstract class RadiusAuthenticator 
 {
 	protected RadiusClient client;
-    protected RadiusAttribute username;
+    protected RadiusAttribute userName;
     protected RadiusAttribute password;
     protected RadiusAttribute classAttribute;
     protected RadiusAttribute stateAttribute;
+	
+String getSharedSecret(InetAddress client);
 
-    public void setupRequest(RadiusClient c, RadiusPacket p) throws RadiusException, NoSuchAlgorithmException
+String getUserPassword(String userName);
+public void setupRequest(RadiusClient c, RadiusPacket p) throws RadiusException, NoSuchAlgorithmException
     {
     	RadiusAttribute a;
         client = c;
@@ -43,59 +46,11 @@ public abstract class RadiusAuthenticator
         }
     }
 
-   
-    public void processChallenge(RadiusPacket request, RadiusPacket challenge)  throws RadiusException, NoSuchAlgorithmException
-    {
-    	classAttribute = challenge.findAttribute(AttributeDictionary.CLASS);
-        if (classAttribute != null)
-        	request.overwriteAttribute(AttributeFactory.copyAttribute(classAttribute, false));
-        
-        stateAttribute = challenge.findAttribute(AttributeDictionary.STATE);
-        if (stateAttribute != null)
-        	request.overwriteAttribute(AttributeFactory.copyAttribute(stateAttribute, false));
-    }
-  
-    public RadiusClient getClient()
-    {
-        return client;
-    }
-   
-    public void setClient(RadiusClient client)
-    {
-        this.client = client;
-    }
-   
-    protected byte[] getUsername()
-    {
-        return username == null ? null : username.getValue().getBytes();
-    }
+public abstract void processRequest(RadiusPacket p) throws RadiusException, NoSuchAlgorithmException;
+	
+RadiusPacket accessRequestReceived(AccessRequest request, InetAddress client);
+RadiusPacket accountingRequestReceived(AccountingRequest request, InetAddress client);
 
-    protected byte[] getPassword()
-    {
-        if (password != null)
-            return password.getValue().getBytes();
-        
-        return "".getBytes();
-    }
-
-
-	public void setUsername(RadiusAttribute userName) 
-	{
-		username = userName;
-	}
-
-	public void setPassword(RadiusAttribute cleartextPassword) 
-	{
-		password = cleartextPassword;
-	}
-
-    protected byte[] getClassAttribute()
-    {
-        return classAttribute == null ? null : classAttribute.getValue().getBytes();
-    }
-
-    protected byte[] getStateAttribute()
-    {
-        return stateAttribute == null ? null : stateAttribute.getValue().getBytes();
-    }
- }
+RadiusServer server = new MyRadiusServer();
+server.start(true, true);
+server.stop();
